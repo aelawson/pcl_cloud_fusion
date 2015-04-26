@@ -7,10 +7,11 @@
 #include <pcl/filters/voxel_grid.h>
 #include <pcl/registration/icp.h>
 #include <pcl/registration/icp_nl.h>
+#include <pcl/registration/ia_ransac.h>
 #include <pcl/search/kdtree.h>
 #include <pcl/features/fpfh.h>
 #include <pcl/features/normal_3d.h>
-#include <pcl/registration/ia_ransac.h>
+#include <pcl/common/transforms.h>
 
 #define VOXEL_LEAF_SIZE 0.05f
 #define ICP_MAX_CORRESPONDANCE_DIST 50
@@ -82,6 +83,8 @@ void initialAlignment(KinectCloud::Ptr cloudOne, KinectCloud::Ptr cloudTwo,
         scia.setInputTarget(cloudTwo);
         scia.setTargetFeatures(cloudTwoFeatures);
         scia.align(*cloudAligned);
+        Eigen::Matrix4f transform = scia.getFinalTransformation();
+        pcl::transformPointCloud(*cloudTwo, *cloudTwo, transform);
 }
 
 // Does second alignment of two clouds using ICP
@@ -113,7 +116,8 @@ int main() {
     filterCloud(cloudTwo, cloudTwoFiltered);
 
     // Registration
-    finalAlignment(cloudOneFiltered, cloudTwoFiltered, cloudAligned);
+    initialAlignment(cloudOneFiltered, cloudTwoFiltered, cloudAligned);
+    // finalAlignment(cloudOneFiltered, cloudAligned, cloudAligned);
 
     // Cloud concatenation
     *cloudOneFiltered += *cloudAligned;
