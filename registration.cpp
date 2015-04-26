@@ -21,8 +21,8 @@
 #define RADIUS_FEATURES 0.10
 #define RADIUS_NORMALS 0.05
 #define SCIA_MIN_SAMPLE_DIST 0.01
-#define SCIA_MAX_CORRESPONDANCE_DIST 1
-#define SCIA_MAX_ITERATIONS 50
+#define SCIA_MAX_CORRESPONDANCE_DIST 0.1
+#define SCIA_MAX_ITERATIONS 100
 
 typedef pcl::PointXYZRGBA KinectPoint;
 typedef pcl::FPFHSignature33 KinectFeature;
@@ -85,10 +85,10 @@ KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne,
         scia.setMinSampleDistance(SCIA_MIN_SAMPLE_DIST);
         scia.setMaxCorrespondenceDistance(SCIA_MAX_CORRESPONDANCE_DIST);
         scia.setMaximumIterations(SCIA_MAX_ITERATIONS);
-        scia.setInputSource(cloudOne);
-        scia.setSourceFeatures(cloudOneFeatures);
-        scia.setInputTarget(cloudTwo);
-        scia.setTargetFeatures(cloudTwoFeatures);
+        scia.setInputSource(cloudTwo);
+        scia.setSourceFeatures(cloudTwoFeatures);
+        scia.setInputTarget(cloudOne);
+        scia.setTargetFeatures(cloudOneFeatures);
         scia.align(*cloudAligned);
         Eigen::Matrix4f transform = scia.getFinalTransformation();
         pcl::transformPointCloud(*cloudTwo, *cloudTransformed, transform);
