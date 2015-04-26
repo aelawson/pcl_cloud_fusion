@@ -20,7 +20,8 @@
 #define ICP_EUCLIDEAN_EPSILON 1
 #define RADIUS_FEATURES 0.10
 #define RADIUS_NORMALS 0.05
-#define SCIA_MAX_CORRESPONDANCE_DIST 5
+#define SCIA_MIN_SAMPLE_DIST 0.01
+#define SCIA_MAX_CORRESPONDANCE_DIST 1
 #define SCIA_MAX_ITERATIONS 50
 
 typedef pcl::PointXYZRGBA KinectPoint;
@@ -81,6 +82,7 @@ KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne,
             = getCloudFeatures(cloudOne, cloudOneNormals);
         KinectFCloud::Ptr cloudTwoFeatures
             = getCloudFeatures(cloudTwo, cloudTwoNormals);
+        scia.setMinSampleDistance(SCIA_MIN_SAMPLE_DIST);
         scia.setMaxCorrespondenceDistance(SCIA_MAX_CORRESPONDANCE_DIST);
         scia.setMaximumIterations(SCIA_MAX_ITERATIONS);
         scia.setInputSource(cloudOne);
