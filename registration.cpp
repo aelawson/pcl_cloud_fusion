@@ -52,7 +52,7 @@ KinectNCloud::Ptr getCloudNormals(KinectCloud::Ptr cloud) {
 }
 
 // Retrieves features from cloud using a KDTree
-KinectFCloud::Ptr getCloudFeatures(KinectCloud::Ptr cloud, KinectNCloud cloudNormals) {
+KinectFCloud::Ptr getCloudFeatures(KinectCloud::Ptr cloud, KinectNCloud::Ptr cloudNormals) {
     KinectFCloud::Ptr cloudFeatures (new KinectFCloud);
     KinectKdTree::Ptr searchMethod (new KinectKdTree);
     KinectFeatureEst estimator;
@@ -65,7 +65,7 @@ KinectFCloud::Ptr getCloudFeatures(KinectCloud::Ptr cloud, KinectNCloud cloudNor
 }
 
 // Initially aligns two clouds using SAC
-void initialAlignment(KinectCloud cloudOne, KinectCloud cloudTwo,
+void initialAlignment(KinectCloud::Ptr cloudOne, KinectCloud::Ptr cloudTwo,
     KinectCloud::Ptr cloudAligned) {
         KinectSCIA scia;
         KinectNCloud::Ptr cloudOneNormals
