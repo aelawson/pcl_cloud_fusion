@@ -10,6 +10,7 @@
 #include <pcl/search/kdtree.h>
 #include <pcl/features/fpfh.h>
 #include <pcl/features/normal_3d.h>
+#include <pcl/registration/ia_ransac.h>
 
 #define VOXEL_LEAF_SIZE 0.05f
 #define ICP_MAX_CORRESPONDANCE_DIST 50
@@ -25,8 +26,11 @@ typedef pcl::PointCloud<KinectPoint> KinectCloud;
 typedef pcl::PointCloud<KinectFeature> KinectFCloud;
 typedef pcl::PointCloud<pcl::Normal> KinectNCloud;
 typedef pcl::search::KdTree<KinectPoint> KinectKdTree;
-typedef pcl::FPFHEstimation<KinectPoint, pcl::Normal, KinectFeature> KinectFeatureEst;
 typedef pcl::NormalEstimation<KinectPoint, pcl::Normal> KinectNormalEst;
+typedef pcl::FPFHEstimation<KinectPoint, pcl::Normal,
+    KinectFeature> KinectFeatureEst;
+typedef pcl::SampleConsensusInitialAlignment<KinectPoint, KinectPoint,
+    KinectFeature> KinectSCIA;
 
 // Filters a cloud using a Voxel Grid
 void filterCloud(KinectCloud::Ptr cloud, KinectCloud::Ptr cloudFiltered) {
@@ -40,18 +44,18 @@ void filterCloud(KinectCloud::Ptr cloud, KinectCloud::Ptr cloudFiltered) {
 KinectNCloud getCloudNormals(KinectCloud::Ptr cloud) {
     KinectNCloud::Ptr cloudNormals = KinectNCloud::Ptr (new KinectNCloud);
     KinectNormalEst estimator;
-    estimator.setInputSource(cloud);
+    estimator.setInputCloud(cloud);
     estimator.setRadiusSearch(RADIUS_NORMALS);
     estimator.compute(cloudNormals);
     return cloudNormals;
 }
 
 // Retrieves features from cloud using a KDTree
-KinectFeature getCloudFeatures(KinectCloud cloud, KinectNCloud cloudNormals) {
+KinectFCloud getCloudFeatures(KinectCloud cloud, KinectNCloud cloudNormals) {
     KinectFCloud::Ptr cloudFeatures = KinectFCloud::Ptr (new KinectFCloud);
     KinectKdTree::Ptr searchMethod = KinectKdTree::Ptr (new KinectKdTree);
     KinectFeatureEst estimator;
-    estimator.setInputSource(cloud);
+    estimator.setInputCloud(cloud);
     estimator.setInputNormals(cloudNormals);
     estimator.setSearchMethod(searchMethod);
     estimator.setRadiusSearch(RADIUS_FEATURES);
@@ -61,10 +65,9 @@ KinectFeature getCloudFeatures(KinectCloud cloud, KinectNCloud cloudNormals) {
 
 // Initially aligns two clouds using SAC
 void initialAlignment(KinectCloud cloudOne, KinectCloud cloudTwo) {
-    KinectFeature::Ptr cloudOneFeatures = getCloudFeatures();
-    KinectFeature::Ptr cloudTwoFeatures = getCloudFeatures();
-    pcl::SampleConsensusInitialAlignment<KinectPoint, KinectPoint,
-        KinectFeature> scia;
+    KinectFCloud::Ptr cloudOneFeatures = getCloudFeatures();
+    KinectFCloud::Ptr cloudTwoFeatures = getCloudFeatures();
+    KinectSCIA scia;
     scia.setInputSource(cloudOne);
     scia.setInputTarget(cloudTwo);
     scia.setInputFeatures()
