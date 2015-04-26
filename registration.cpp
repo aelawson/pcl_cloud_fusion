@@ -100,8 +100,7 @@ KinectCloud::Ptr finalAlignment(KinectCloud::Ptr cloudOne,
     KinectCloud::Ptr cloudTwo) {
         KinectCloud::Ptr cloudTransformed (new KinectCloud);
         KinectCloud::Ptr cloudAligned (new KinectCloud);
-        pcl::IterativeClosestPoi
-        nt<KinectPoint, KinectPoint> icp;
+        pcl::IterativeClosestPoint<KinectPoint, KinectPoint> icp;
         icp.setMaxCorrespondenceDistance(ICP_MAX_CORRESPONDANCE_DIST);
         icp.setMaximumIterations(ICP_MAX_ITERATIONS);
         icp.setTransformationEpsilon(ICP_TRANSFORMATION_EPSILON);
@@ -109,7 +108,7 @@ KinectCloud::Ptr finalAlignment(KinectCloud::Ptr cloudOne,
         icp.setInputSource(cloudTwo);
         icp.setInputTarget(cloudOne);
         icp.align(*cloudAligned);
-        Eigen::Matrix4f transform = scia.getFinalTransformation();
+        Eigen::Matrix4f transform = icp.getFinalTransformation();
         pcl::transformPointCloud(*cloudTwo, *cloudTransformed, transform);
         return cloudTransformed;
 }
