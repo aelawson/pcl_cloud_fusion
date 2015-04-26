@@ -67,8 +67,9 @@ KinectFCloud::Ptr getCloudFeatures(KinectCloud::Ptr cloud, KinectNCloud::Ptr clo
 
 // Initially aligns two clouds using SAC
 KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne, KinectCloud::Ptr cloudTwo) {
+    KinectCloud::Ptr cloudTransformed (new KinectCloud);
+    KinectCloud::Ptr cloudAligned (new KinectCloud);
     KinectSCIA scia;
-    KinectCloud::Ptr cloudAligned;
     KinectNCloud::Ptr cloudOneNormals
         = getCloudNormals(cloudOne);
     KinectNCloud::Ptr cloudTwoNormals
@@ -82,8 +83,7 @@ KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne, KinectCloud::Ptr cl
     scia.setSourceFeatures(cloudOneFeatures);
     scia.setInputTarget(cloudTwo);
     scia.setTargetFeatures(cloudTwoFeatures);
-    scia.align(cloudAligned);
-    KinectCloud::Ptr cloudTransformed (new KinectCloud);
+    scia.align(*cloudAligned);
     Eigen::Matrix4f transform = scia.getFinalTransformation();
     pcl::transformPointCloud(*cloudTwo, *cloudTransformed, transform);
     return cloudTransformed;
