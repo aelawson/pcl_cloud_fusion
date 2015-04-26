@@ -11,7 +11,7 @@ typedef pcl::PointCloud<pcl::PointXYZRGBA> KinectCloud;
 typedef pcl::PointXYZRGBA KinectPoint;
 
 // Filters a cloud using a Voxel Grid
-void filterCloud(pcl::VoxelGrid<KinectPoint> filter, KinectCloud cloud,
+void filterCloud(pcl::VoxelGrid<KinectPoint> filter, KinectCloud::Ptr cloud,
     KinectCloud::Ptr cloudFiltered) {
         filter.setInputCloud(cloud);
         filter.filter(*cloudFiltered);
@@ -25,7 +25,7 @@ void initialAlignment(KinectCloud cloudOne, KinectCloud cloudTwo) {
 // Does second alignment of two clouds using ICP
 
 void finalAlignment(pcl::IterativeClosestPoint<KinectPoint, KinectPoint> icp,
-    KinectCloud cloudOne, KinectCloud cloudTwo, KinectCloud cloudAligned) {
+    KinectCloud::Ptr cloudOne, KinectCloud::Ptr cloudTwo, KinectCloud::Ptr cloudAligned) {
         icp.setInputSource(cloudTwo);
         icp.setInputTarget(cloudOne);
         icp.align(*cloudAligned);
