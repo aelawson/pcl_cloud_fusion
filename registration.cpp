@@ -118,7 +118,7 @@ int main() {
     filterCloud(cloudTwo, cloudTwoFiltered);
 
     // Registration
-    *cloudTransformed = initialAlignment(cloudOneFiltered, cloudTwoFiltered);
+    cloudTransformed = initialAlignment(cloudOneFiltered, cloudTwoFiltered);
     // finalAlignment(cloudOneFiltered, cloudAligned, cloudAligned);
 
     // Cloud concatenation
