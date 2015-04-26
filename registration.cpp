@@ -66,25 +66,27 @@ KinectFCloud::Ptr getCloudFeatures(KinectCloud::Ptr cloud, KinectNCloud::Ptr clo
 }
 
 // Initially aligns two clouds using SAC
-void initialAlignment(KinectCloud::Ptr cloudOne, KinectCloud::Ptr cloudTwo,
-    KinectCloud::Ptr cloudAligned) {
-        KinectSCIA scia;
-        KinectNCloud::Ptr cloudOneNormals
-            = getCloudNormals(cloudOne);
-        KinectNCloud::Ptr cloudTwoNormals
-            = getCloudNormals(cloudTwo);
-        KinectFCloud::Ptr cloudOneFeatures
-            = getCloudFeatures(cloudOne, cloudOneNormals);
-        KinectFCloud::Ptr cloudTwoFeatures
-            = getCloudFeatures(cloudTwo, cloudTwoNormals);
-        scia.setMaximumIterations(SCIA_MAX_ITERATIONS);
-        scia.setInputSource(cloudOne);
-        scia.setSourceFeatures(cloudOneFeatures);
-        scia.setInputTarget(cloudTwo);
-        scia.setTargetFeatures(cloudTwoFeatures);
-        scia.align(*cloudAligned);
-        Eigen::Matrix4f transform = scia.getFinalTransformation();
-        pcl::transformPointCloud(*cloudTwo, *cloudTwo, transform);
+KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne, KinectCloud::Ptr cloudTwo) {
+    KinectSCIA scia;
+    KinectCloud::Ptr cloudAligned;
+    KinectNCloud::Ptr cloudOneNormals
+        = getCloudNormals(cloudOne);
+    KinectNCloud::Ptr cloudTwoNormals
+        = getCloudNormals(cloudTwo);
+    KinectFCloud::Ptr cloudOneFeatures
+        = getCloudFeatures(cloudOne, cloudOneNormals);
+    KinectFCloud::Ptr cloudTwoFeatures
+        = getCloudFeatures(cloudTwo, cloudTwoNormals);
+    scia.setMaximumIterations(SCIA_MAX_ITERATIONS);
+    scia.setInputSource(cloudOne);
+    scia.setSourceFeatures(cloudOneFeatures);
+    scia.setInputTarget(cloudTwo);
+    scia.setTargetFeatures(cloudTwoFeatures);
+    scia.align(cloudAligned);
+    KinectCloud::Ptr cloudTransformed (new KinectCloud);
+    Eigen::Matrix4f transform = scia.getFinalTransformation();
+    pcl::transformPointCloud(*cloudTwo, *cloudTransformed, transform);
+    return cloudTransformed;
 }
 
 // Does second alignment of two clouds using ICP
@@ -106,7 +108,7 @@ int main() {
     KinectCloud::Ptr cloudTwo (new KinectCloud);
     KinectCloud::Ptr cloudOneFiltered (new KinectCloud);
     KinectCloud::Ptr cloudTwoFiltered (new KinectCloud);
-    KinectCloud::Ptr cloudAligned (new KinectCloud);
+    KinectCloud::Ptr cloudTransformed (new KinectCloud);
 
     pcl::io::loadPCDFile("cloud_new_1.pcd", *cloudOne);
     pcl::io::loadPCDFile("cloud_new_2.pcd", *cloudTwo);
@@ -116,11 +118,11 @@ int main() {
     filterCloud(cloudTwo, cloudTwoFiltered);
 
     // Registration
-    initialAlignment(cloudOneFiltered, cloudTwoFiltered, cloudAligned);
+    initialAlignment(cloudOneFiltered, cloudTwoFiltered);
     // finalAlignment(cloudOneFiltered, cloudAligned, cloudAligned);
 
     // Cloud concatenation
-    *cloudOneFiltered += *cloudAligned;
+    *cloudOneFiltered += *cloudTwo;
 
     // Visualization
     pcl::visualization::CloudViewer viewer("Cloud Viewer");
