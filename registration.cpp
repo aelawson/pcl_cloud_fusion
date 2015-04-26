@@ -14,12 +14,13 @@
 #include <pcl/common/transforms.h>
 
 #define VOXEL_LEAF_SIZE 0.05f
-#define ICP_MAX_CORRESPONDANCE_DIST 50
+#define ICP_MAX_CORRESPONDANCE_DIST 5
 #define ICP_MAX_ITERATIONS 50
 #define ICP_TRANSFORMATION_EPSILON 1e-8
 #define ICP_EUCLIDEAN_EPSILON 1
-#define RADIUS_FEATURES 0.05
+#define RADIUS_FEATURES 0.10
 #define RADIUS_NORMALS 0.05
+#define SCIA_MAX_CORRESPONDANCE_DIST 5
 #define SCIA_MAX_ITERATIONS 50
 
 typedef pcl::PointXYZRGBA KinectPoint;
@@ -53,40 +54,43 @@ KinectNCloud::Ptr getCloudNormals(KinectCloud::Ptr cloud) {
 }
 
 // Retrieves features from cloud using a KDTree
-KinectFCloud::Ptr getCloudFeatures(KinectCloud::Ptr cloud, KinectNCloud::Ptr cloudNormals) {
-    KinectFCloud::Ptr cloudFeatures (new KinectFCloud);
-    KinectKdTree::Ptr searchMethod (new KinectKdTree);
-    KinectFeatureEst estimator;
-    estimator.setInputCloud(cloud);
-    estimator.setInputNormals(cloudNormals);
-    estimator.setSearchMethod(searchMethod);
-    estimator.setRadiusSearch(RADIUS_FEATURES);
-    estimator.compute(*cloudFeatures);
-    return cloudFeatures;
+KinectFCloud::Ptr getCloudFeatures(KinectCloud::Ptr cloud,
+    KinectNCloud::Ptr cloudNormals) {
+        KinectFCloud::Ptr cloudFeatures (new KinectFCloud);
+        KinectKdTree::Ptr searchMethod (new KinectKdTree);
+        KinectFeatureEst estimator;
+        estimator.setInputCloud(cloud);
+        estimator.setInputNormals(cloudNormals);
+        estimator.setSearchMethod(searchMethod);
+        estimator.setRadiusSearch(RADIUS_FEATURES);
+        estimator.compute(*cloudFeatures);
+        return cloudFeatures;
 }
 
 // Initially aligns two clouds using SAC
-KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne, KinectCloud::Ptr cloudTwo) {
-    KinectCloud::Ptr cloudTransformed (new KinectCloud);
-    KinectCloud::Ptr cloudAligned (new KinectCloud);
-    KinectSCIA scia;
-    KinectNCloud::Ptr cloudOneNormals
-        = getCloudNormals(cloudOne);
-    KinectNCloud::Ptr cloudTwoNormals
-        = getCloudNormals(cloudTwo);
-    KinectFCloud::Ptr cloudOneFeatures
-        = getCloudFeatures(cloudOne, cloudOneNormals);
-    KinectFCloud::Ptr cloudTwoFeatures
-        = getCloudFeatures(cloudTwo, cloudTwoNormals);
-    scia.setMaximumIterations(SCIA_MAX_ITERATIONS);
-    scia.setInputSource(cloudOne);
-    scia.setSourceFeatures(cloudOneFeatures);
-    scia.setInputTarget(cloudTwo);
-    scia.setTargetFeatures(cloudTwoFeatures);
-    scia.align(*cloudAligned);
-    Eigen::Matrix4f transform = scia.getFinalTransformation();
-    pcl::transformPointCloud(*cloudTwo, *cloudTransformed, transform);
-    return cloudTransformed;
+KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne,
+    KinectCloud::Ptr cloudTwo) {
+        KinectCloud::Ptr cloudTransformed (new KinectCloud);
+        KinectCloud::Ptr cloudAligned (new KinectCloud);
+        KinectSCIA scia;
+        KinectNCloud::Ptr cloudOneNormals
+            = getCloudNormals(cloudOne);
+        KinectNCloud::Ptr cloudTwoNormals
+            = getCloudNormals(cloudTwo);
+        KinectFCloud::Ptr cloudOneFeatures
+            = getCloudFeatures(cloudOne, cloudOneNormals);
+        KinectFCloud::Ptr cloudTwoFeatures
+            = getCloudFeatures(cloudTwo, cloudTwoNormals);
+        scia.setMaxCorrespondanceDistance(SCIA_MAX_CORRESPONDANCE_DIST);
+        scia.setMaximumIterations(SCIA_MAX_ITERATIONS);
+        scia.setInputSource(cloudOne);
+        scia.setSourceFeatures(cloudOneFeatures);
+        scia.setInputTarget(cloudTwo);
+        scia.setTargetFeatures(cloudTwoFeatures);
+        scia.align(*cloudAligned);
+        Eigen::Matrix4f transform = scia.getFinalTransformation();
+        pcl::transformPointCloud(*cloudTwo, *cloudTransformed, transform);
+        return cloudTransformed;
 }
 
 // Does second alignment of two clouds using ICP
