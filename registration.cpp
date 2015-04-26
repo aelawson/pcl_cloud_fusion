@@ -118,11 +118,11 @@ int main() {
     filterCloud(cloudTwo, cloudTwoFiltered);
 
     // Registration
-    initialAlignment(cloudOneFiltered, cloudTwoFiltered);
+    *cloudTransformed = initialAlignment(cloudOneFiltered, cloudTwoFiltered);
     // finalAlignment(cloudOneFiltered, cloudAligned, cloudAligned);
 
     // Cloud concatenation
-    *cloudOneFiltered += *cloudTwo;
+    *cloudOneFiltered += *cloudTransformed;
 
     // Visualization
     pcl::visualization::CloudViewer viewer("Cloud Viewer");
