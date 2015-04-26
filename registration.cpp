@@ -14,7 +14,7 @@
 #include <pcl/common/transforms.h>
 
 #define VOXEL_LEAF_SIZE 0.05f
-#define ICP_MAX_CORRESPONDANCE_DIST 5
+#define ICP_MAX_CORRESPONDANCE_DIST 0.1
 #define ICP_MAX_ITERATIONS 50
 #define ICP_TRANSFORMATION_EPSILON 1e-8
 #define ICP_EUCLIDEAN_EPSILON 1
@@ -96,9 +96,12 @@ KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne,
 }
 
 // Does second alignment of two clouds using ICP
-void finalAlignment(KinectCloud::Ptr cloudOne, KinectCloud::Ptr cloudTwo,
-    KinectCloud::Ptr cloudAligned) {
-        pcl::IterativeClosestPoint<KinectPoint, KinectPoint> icp;
+KinectCloud::Ptr finalAlignment(KinectCloud::Ptr cloudOne,
+    KinectCloud::Ptr cloudTwo) {
+        KinectCloud::Ptr cloudTransformed (new KinectCloud);
+        KinectCloud::Ptr cloudAligned (new KinectCloud);
+        pcl::IterativeClosestPoi
+        nt<KinectPoint, KinectPoint> icp;
         icp.setMaxCorrespondenceDistance(ICP_MAX_CORRESPONDANCE_DIST);
         icp.setMaximumIterations(ICP_MAX_ITERATIONS);
         icp.setTransformationEpsilon(ICP_TRANSFORMATION_EPSILON);
@@ -106,6 +109,9 @@ void finalAlignment(KinectCloud::Ptr cloudOne, KinectCloud::Ptr cloudTwo,
         icp.setInputSource(cloudTwo);
         icp.setInputTarget(cloudOne);
         icp.align(*cloudAligned);
+        Eigen::Matrix4f transform = scia.getFinalTransformation();
+        pcl::transformPointCloud(*cloudTwo, *cloudTransformed, transform);
+        return cloudTransformed;
 }
 
 int main() {
@@ -125,7 +131,7 @@ int main() {
 
     // Registration
     cloudTransformed = initialAlignment(cloudOneFiltered, cloudTwoFiltered);
-    // finalAlignment(cloudOneFiltered, cloudAligned, cloudAligned);
+    cloudTransformed = finalAlignment(cloudOneFiltered, cloudTransformed);
 
     // Cloud concatenation
     *cloudOneFiltered += *cloudTransformed;
