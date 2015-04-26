@@ -55,7 +55,7 @@ int main () {
     filterCloud(voxel, cloudTwo, cloudTwoFiltered);
 
     // Registration
-    finalAlignment(cloudOneFiltered, cloudTwoFiltered, cloudAligned);
+    finalAlignment(icp, cloudOneFiltered, cloudTwoFiltered, cloudAligned);
 
     // Cloud concatenation
     *cloudOneFiltered += *cloudAligned;
