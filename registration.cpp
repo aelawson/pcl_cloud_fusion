@@ -81,7 +81,7 @@ KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne,
             = getCloudFeatures(cloudOne, cloudOneNormals);
         KinectFCloud::Ptr cloudTwoFeatures
             = getCloudFeatures(cloudTwo, cloudTwoNormals);
-        scia.setMaxCorrespondanceDistance(SCIA_MAX_CORRESPONDANCE_DIST);
+        scia.setMaxCorrespondenceDistance(SCIA_MAX_CORRESPONDANCE_DIST);
         scia.setMaximumIterations(SCIA_MAX_ITERATIONS);
         scia.setInputSource(cloudOne);
         scia.setSourceFeatures(cloudOneFeatures);
