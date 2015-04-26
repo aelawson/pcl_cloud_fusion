@@ -19,6 +19,7 @@
 #define ICP_EUCLIDEAN_EPSILON 1
 #define RADIUS_FEATURES 0.05
 #define RADIUS_NORMALS 0.05
+#define SCIA_MAX_ITERATIONS 50
 
 typedef pcl::PointXYZRGBA KinectPoint;
 typedef pcl::FPFHSignature33 KinectFeature;
@@ -64,17 +65,26 @@ KinectFCloud getCloudFeatures(KinectCloud cloud, KinectNCloud cloudNormals) {
 }
 
 // Initially aligns two clouds using SAC
-void initialAlignment(KinectCloud cloudOne, KinectCloud cloudTwo) {
-    KinectFCloud::Ptr cloudOneFeatures = getCloudFeatures();
-    KinectFCloud::Ptr cloudTwoFeatures = getCloudFeatures();
-    KinectSCIA scia;
-    scia.setInputSource(cloudOne);
-    scia.setInputTarget(cloudTwo);
-    scia.setInputFeatures()
+void initialAlignment(KinectCloud cloudOne, KinectCloud cloudTwo,
+    KinectCloud::Ptr cloudAligned) {
+        KinectSCIA scia;
+        KinectNCloud::Ptr cloudOneNormals
+            = getCloudNormals(cloudOne);
+        KinectNCloud::Ptr cloudTwoNormals
+            = getCloudNormals(cloudTwo);
+        KinectFCloud::Ptr cloudOneFeatures
+            = getCloudFeatures(cloudOne, cloudOneNormals);
+        KinectFCloud::Ptr cloudTwoFeatures
+            = getCloudFeatures(cloudTwo, cloudTwoNormals);
+        scia.setMaximumIterations(SCIA_MAX_ITERATIONS);
+        scia.setInputSource(cloudOne);
+        scia.setSourceFeatures(cloudOneFeatures);
+        scia.setInputTarget(cloudTwo);
+        scia.setTargetFeatures(cloudTwoFeatures);
+        scia.align(*cloudAligned);
 }
 
 // Does second alignment of two clouds using ICP
-
 void finalAlignment(KinectCloud::Ptr cloudOne, KinectCloud::Ptr cloudTwo,
     KinectCloud::Ptr cloudAligned) {
         pcl::IterativeClosestPoint<KinectPoint, KinectPoint> icp;
