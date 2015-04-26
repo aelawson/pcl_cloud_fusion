@@ -43,7 +43,7 @@ void filterCloud(KinectCloud::Ptr cloud, KinectCloud::Ptr cloudFiltered) {
 
 // Retrieves normals from cloud.
 KinectNCloud getCloudNormals(KinectCloud::Ptr cloud) {
-    KinectNCloud::Ptr cloudNormals = KinectNCloud::Ptr (new KinectNCloud);
+    KinectNCloud::Ptr cloudNormals (new KinectNCloud);
     KinectNormalEst estimator;
     estimator.setInputCloud(cloud);
     estimator.setRadiusSearch(RADIUS_NORMALS);
@@ -53,8 +53,8 @@ KinectNCloud getCloudNormals(KinectCloud::Ptr cloud) {
 
 // Retrieves features from cloud using a KDTree
 KinectFCloud getCloudFeatures(KinectCloud cloud, KinectNCloud cloudNormals) {
-    KinectFCloud::Ptr cloudFeatures = KinectFCloud::Ptr (new KinectFCloud);
-    KinectKdTree::Ptr searchMethod = KinectKdTree::Ptr (new KinectKdTree);
+    KinectFCloud::Ptr cloudFeatures (new KinectFCloud);
+    KinectKdTree::Ptr searchMethod (new KinectKdTree);
     KinectFeatureEst estimator;
     estimator.setInputCloud(cloud);
     estimator.setInputNormals(cloudNormals);
