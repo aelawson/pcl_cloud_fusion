@@ -36,6 +36,10 @@ typedef pcl::FPFHEstimation<KinectPoint, pcl::Normal,
 typedef pcl::SampleConsensusInitialAlignment<KinectPoint, KinectPoint,
     KinectFeature> KinectSCIA;
 
+KinectCloud::Ptr cloudOne (new KinectCloud);
+KinectCloud::Ptr cloudTwo (new KinectCloud);
+int index = 0;
+
 // Filters a cloud using a Voxel Grid
 void filterCloud(KinectCloud::Ptr cloud, KinectCloud::Ptr cloudFiltered) {
     pcl::VoxelGrid<KinectPoint> voxel;
@@ -113,34 +117,74 @@ KinectCloud::Ptr finalAlignment(KinectCloud::Ptr cloudOne,
         return cloudTransformed;
 }
 
-int main() {
-    // Declarations
-    KinectCloud::Ptr cloudOne (new KinectCloud);
-    KinectCloud::Ptr cloudTwo (new KinectCloud);
-    KinectCloud::Ptr cloudOneFiltered (new KinectCloud);
-    KinectCloud::Ptr cloudTwoFiltered (new KinectCloud);
-    KinectCloud::Ptr cloudTransformed (new KinectCloud);
-
-    pcl::io::loadPCDFile("cloud_new_1.pcd", *cloudOne);
-    pcl::io::loadPCDFile("cloud_new_2.pcd", *cloudTwo);
-
-    // Filtering
-    filterCloud(cloudOne, cloudOneFiltered);
-    filterCloud(cloudTwo, cloudTwoFiltered);
-
-    // Registration
-    cloudTransformed = initialAlignment(cloudOneFiltered, cloudTwoFiltered);
-    cloudTransformed = finalAlignment(cloudOneFiltered, cloudTransformed);
-
-    // Cloud concatenation
-    *cloudOneFiltered += *cloudTransformed;
-
-    // Visualization
-    pcl::visualization::CloudViewer viewer("Cloud Viewer");
-
-    // Blocks until the cloud is actually rendered
-    viewer.showCloud(cloudOneFiltered);
-    while (!viewer.wasStopped ()) {
+void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloud_ros) {
+    pcl::PCLPointCloud2 cloud_temp;
+    pcl::PointCloud<pcl::PointXYZRGBA> cloud_new;
+    pcl_conversions::toPCL(cloud_ros, cloud_temp);
+    pcl::fromPCLPointCloud2(cloud_temp, cloud_new);
+    ROS_INFO("I received a point cloud from Robot 1...");
+    if (cloudOne.size() == 0) {
+        cloudOne = cloud_new;
     }
-    return 0;
+    else {
+        cloudOne += cloud_new;
+    }
+    index++;
+}
+
+void streamCallbackRobot2(const sensor_msgs::PointCloud2& cloud_ros) {
+    pcl::PCLPointCloud2 cloud_temp;
+    pcl::PointCloud<pcl::PointXYZRGBA> cloud_new;
+    pcl_conversions::toPCL(cloud_ros, cloud_temp);
+    pcl::fromPCLPointCloud2(cloud_temp, cloud_new);
+    ROS_INFO("I received a point cloud from Robot 2...");
+    pcl::io::savePCDFileASCII("test_cloud.pcd", cloud_new);
+    if (cloudTwo.size() == 0) {
+        cloudTwo = cloud_new;
+    }
+    else {
+        cloudTwo += cloud_new;
+    }
+}
+
+int main() {
+    // Listen to ROS topics
+    ros::init(argc, argv, "listener");
+    ros::NodeHandle robot1;
+    // ros::NodeHandle robot2;
+    ros::Subscriber sub1 = robot1.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot1);
+    // ros::Subscriber sub2 = robot2.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot2);
+    ros::spin();
+
+    while (index < 10) {
+
+    }
+    pcl::io::savePCDFileASCII("test_cloud.pcd", cloudOne);
+    // // Declarations
+    // KinectCloud::Ptr cloudOneFiltered (new KinectCloud);
+    // KinectCloud::Ptr cloudTwoFiltered (new KinectCloud);
+    // KinectCloud::Ptr cloudTransformed (new KinectCloud);
+    //
+    // pcl::io::loadPCDFile("cloud_new_1.pcd", *cloudOne);
+    // pcl::io::loadPCDFile("cloud_new_2.pcd", *cloudTwo);
+    //
+    // // Filtering
+    // filterCloud(cloudOne, cloudOneFiltered);
+    // filterCloud(cloudTwo, cloudTwoFiltered);
+    //
+    // // Registration
+    // cloudTransformed = initialAlignment(cloudOneFiltered, cloudTwoFiltered);
+    // cloudTransformed = finalAlignment(cloudOneFiltered, cloudTransformed);
+    //
+    // // Cloud concatenation
+    // *cloudOneFiltered += *cloudTransformed;
+    //
+    // // Visualization
+    // pcl::visualization::CloudViewer viewer("Cloud Viewer");
+    //
+    // // Blocks until the cloud is actually rendered
+    // viewer.showCloud(cloudOneFiltered);
+    // while (!viewer.wasStopped()) {
+    // }
+    // return 0;
 }
