@@ -17,6 +17,7 @@ find_package(
 )
 
 catkin_package(
+	INCLUDE_DIRS include
 	LIBRARIES cloud_fusion
 	CATKIN_DEPENDS roscpp rospy sensor_msgs std_msgs
 	DEPENDS system_lib PCL

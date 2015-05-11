@@ -1,3 +1,5 @@
+#include "ros/ros.h"
+#include "sensor_msgs/PointCloud2.h"
 #include <pcl/visualization/cloud_viewer.h>
 #include <iostream>
 #include <pcl/io/io.h>
@@ -12,6 +14,9 @@
 #include <pcl/features/fpfh.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/common/transforms.h>
+#include <pcl/ros/conversions.h>
+#include <pcl/PCLPointCloud2.h>
+#include <pcl_conversions/pcl_conversions.h>
 
 #define VOXEL_LEAF_SIZE 0.05f
 #define ICP_MAX_CORRESPONDANCE_DIST 0.1
@@ -38,7 +43,7 @@ typedef pcl::SampleConsensusInitialAlignment<KinectPoint, KinectPoint,
 
 KinectCloud::Ptr cloudOne (new KinectCloud);
 KinectCloud::Ptr cloudTwo (new KinectCloud);
-int index = 0;
+int indext;
 
 // Filters a cloud using a Voxel Grid
 void filterCloud(KinectCloud::Ptr cloud, KinectCloud::Ptr cloudFiltered) {
@@ -123,13 +128,13 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloud_ros) {
     pcl_conversions::toPCL(cloud_ros, cloud_temp);
     pcl::fromPCLPointCloud2(cloud_temp, cloud_new);
     ROS_INFO("I received a point cloud from Robot 1...");
-    if (cloudOne.size() == 0) {
-        cloudOne = cloud_new;
+    if (cloudOne->points.size() == 0) {
+        *cloudOne = cloud_new;
     }
     else {
-        cloudOne += cloud_new;
+        *cloudOne += cloud_new;
     }
-    index++;
+    indext++;
 }
 
 void streamCallbackRobot2(const sensor_msgs::PointCloud2& cloud_ros) {
@@ -139,27 +144,27 @@ void streamCallbackRobot2(const sensor_msgs::PointCloud2& cloud_ros) {
     pcl::fromPCLPointCloud2(cloud_temp, cloud_new);
     ROS_INFO("I received a point cloud from Robot 2...");
     pcl::io::savePCDFileASCII("test_cloud.pcd", cloud_new);
-    if (cloudTwo.size() == 0) {
-        cloudTwo = cloud_new;
+    if (cloudTwo->points.size() == 0) {
+        *cloudTwo = cloud_new;
     }
     else {
-        cloudTwo += cloud_new;
+        *cloudTwo += cloud_new;
     }
 }
 
-int main() {
+int main(int argc, char **argv) {
     // Listen to ROS topics
+    indext = 0;
     ros::init(argc, argv, "listener");
     ros::NodeHandle robot1;
     // ros::NodeHandle robot2;
     ros::Subscriber sub1 = robot1.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot1);
     // ros::Subscriber sub2 = robot2.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot2);
     ros::spin();
-
-    while (index < 10) {
+    while (indext < 10) {
 
     }
-    pcl::io::savePCDFileASCII("test_cloud.pcd", cloudOne);
+    pcl::io::savePCDFileASCII("test_cloud.pcd", *cloudOne);
     // // Declarations
     // KinectCloud::Ptr cloudOneFiltered (new KinectCloud);
     // KinectCloud::Ptr cloudTwoFiltered (new KinectCloud);
@@ -186,5 +191,5 @@ int main() {
     // viewer.showCloud(cloudOneFiltered);
     // while (!viewer.wasStopped()) {
     // }
-    // return 0;
+    return 0;
 }
