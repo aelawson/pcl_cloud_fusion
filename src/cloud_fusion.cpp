@@ -130,12 +130,13 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloud_ros) {
     pcl::fromPCLPointCloud2(cloud_temp, cloud_new);
     ROS_INFO("I received a point cloud from Robot 1...");
 
-    // Get transform
+    // Get and apply transform from camera to map
     tf::TransformListener tfListener;
     tf::StampedTransform transform;
     try {
-        tfListener.waitForTransform("/map", "/camera_link", ros::Time::now(), ros::Duration(3.0));
+        tfListener.waitForTransform("/map", "/camera_link", ros::Time::now(), ros::Duration(10.0));
         tfListener.lookupTransform("/map", "/camera_link", ros::Time::now(), transform);
+        pcl::transformPointCloud(cloud_new, cloud_temp, transform);
     }
     catch(tf::TransformException e) {
         ROS_ERROR("%s", e.what());
@@ -143,10 +144,10 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloud_ros) {
     }
 
     if (cloudOne->points.size() == 0) {
-        *cloudOne = cloud_new;
+        *cloudOne = cloud_temp;
     }
     else {
-        *cloudOne += cloud_new;
+        *cloudOne += cloud_temp;
     }
     indext++;
 }
