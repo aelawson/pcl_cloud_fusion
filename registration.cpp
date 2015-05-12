@@ -12,6 +12,7 @@
 #include <pcl/features/fpfh.h>
 #include <pcl/features/normal_3d.h>
 #include <pcl/common/transforms.h>
+#include <tf/transform_listener.h>
 
 #define VOXEL_LEAF_SIZE 0.05f
 #define ICP_MAX_CORRESPONDANCE_DIST 0.1
@@ -123,6 +124,18 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloud_ros) {
     pcl_conversions::toPCL(cloud_ros, cloud_temp);
     pcl::fromPCLPointCloud2(cloud_temp, cloud_new);
     ROS_INFO("I received a point cloud from Robot 1...");
+
+    // Get transform
+    tf::TransformListener tfListener;
+    tf::StampedTransform transform;
+    try {
+        tfListener.lookupTransform("/camera_link", "/map", ros::Time(0), transform);
+    }
+    catch(tf::TransformException e) {
+        ROS_ERROR("%s", e.what());
+        ros::Duration(1.0).sleep();
+    }
+
     if (cloudOne.size() == 0) {
         cloudOne = cloud_new;
     }
@@ -138,7 +151,6 @@ void streamCallbackRobot2(const sensor_msgs::PointCloud2& cloud_ros) {
     pcl_conversions::toPCL(cloud_ros, cloud_temp);
     pcl::fromPCLPointCloud2(cloud_temp, cloud_new);
     ROS_INFO("I received a point cloud from Robot 2...");
-    pcl::io::savePCDFileASCII("test_cloud.pcd", cloud_new);
     if (cloudTwo.size() == 0) {
         cloudTwo = cloud_new;
     }
