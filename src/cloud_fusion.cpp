@@ -134,6 +134,7 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloud_ros) {
     tf::TransformListener tfListener;
     tf::StampedTransform transform;
     try {
+        tfListener.waitForTransform("/map", "/camera_link", ros::Time(0), ros::Duration(1.0));
         tfListener.lookupTransform("/map", "/camera_link", ros::Time(0), transform);
     }
     catch(tf::TransformException e) {
