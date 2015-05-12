@@ -8,6 +8,7 @@ find_package(
 	rospy
 	sensor_msgs
 	std_msgs
+	tf
 )
 
 find_package(
