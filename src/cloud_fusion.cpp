@@ -139,7 +139,7 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloud_ros) {
     try {
         tfListener.waitForTransform("/map", "/camera_link", ros::Time::now(), ros::Duration(10.0));
         tfListener.lookupTransform("/map", "/camera_link", ros::Time::now(), transform);
-        tf::transformTFTToEigen(transform, transform_eigen);
+        tf::transformTFToEigen(transform, transform_eigen);
         pcl::transformPointCloud(*cloud_new, *cloud_transf, transform_eigen);
     }
     catch(tf::TransformException e) {
