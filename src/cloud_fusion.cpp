@@ -18,6 +18,7 @@
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/visualization/cloud_viewer.h>
 #include <tf/transform_listener.h>
+#include <tf_conversions/tf_eigen.h>
 
 #define VOXEL_LEAF_SIZE 0.05f
 #define ICP_MAX_CORRESPONDANCE_DIST 0.1
@@ -134,10 +135,12 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloud_ros) {
     // Get and apply transform from camera to map
     tf::TransformListener tfListener;
     tf::StampedTransform transform;
+    Eigen::Affine3d transform_eigen;
     try {
         tfListener.waitForTransform("/map", "/camera_link", ros::Time::now(), ros::Duration(10.0));
         tfListener.lookupTransform("/map", "/camera_link", ros::Time::now(), transform);
-        pcl::transformPointCloud(*cloud_new, *cloud_transf, transform);
+        tf::transformTFTToEigen(transform, transform_eigen);
+        pcl::transformPointCloud(*cloud_new, *cloud_transf, transform_eigen);
     }
     catch(tf::TransformException e) {
         ROS_ERROR("%s", e.what());

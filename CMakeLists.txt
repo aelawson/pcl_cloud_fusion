@@ -22,6 +22,8 @@ find_package(
 	ros
 )
 
+find_package(tf_conversions)
+
 catkin_package(
 	LIBRARIES cloud_fusion
 	CATKIN_DEPENDS roscpp rospy sensor_msgs std_msgs
@@ -31,6 +33,7 @@ catkin_package(
 include_directories(
 	${catkin_INCLUDE_DIRS}
 	${PCL_INCLUDE_DIRS}
+	${tf_conversions_INCLUDE_DIRS}
 )
 
 add_executable (cloud_fusion src/cloud_fusion.cpp)
@@ -38,6 +41,7 @@ add_executable (cloud_fusion src/cloud_fusion.cpp)
 target_link_libraries (cloud_fusion
 	${catkin_LIBRARIES}
 	${PCL_LIBRARIES}
+	${tf_conversions_LIBRARIES}
 )
 
 add_dependencies(cloud_fusion cloud_fusion_cpp)
