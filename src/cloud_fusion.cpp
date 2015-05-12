@@ -130,9 +130,6 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloud_ros) {
     pcl::fromPCLPointCloud2(cloud_temp, cloud_new);
     ROS_INFO("I received a point cloud from Robot 1...");
 
-    // Get transform
-    tf::TransformListener tfListener;
-    tf::StampedTransform transform;
     try {
         tfListener.waitForTransform("/map", "/camera_link", ros::Time(0), ros::Duration(1.0));
         tfListener.lookupTransform("/map", "/camera_link", ros::Time(0), transform);
@@ -173,6 +170,8 @@ int main(int argc, char **argv) {
     // ros::NodeHandle robot2;
     ros::Subscriber sub1 = robot1.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot1);
     // ros::Subscriber sub2 = robot2.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot2);
+    tf::TransformListener tfListener;
+    tf::StampedTransform transform;
     ros::spin();
     while (indext < 10) {
 
