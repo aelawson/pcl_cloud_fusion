@@ -138,11 +138,11 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     ROS_INFO("Cloud frame id is: %s", cloudFrame.c_str());
 
     // Get and apply transform from camera to map
-    tf::TransformListener tfListener(ros::Duration(30.0), true);
+    tf::TransformListener tfListener;
     tf::StampedTransform transform;
     Eigen::Affine3d transformEigen;
     try {
-        tfListener.waitForTransform(fixedFrame, cloudFrame, ros::Time(0), ros::Duration(1.0));
+        tfListener.waitForTransform(fixedFrame, cloudFrame, ros::Time(0), ros::Duration(10.0));
         tfListener.lookupTransform(fixedFrame, cloudFrame, ros::Time(0), transform);
         tf::transformTFToEigen(transform, transformEigen);
         pcl::transformPointCloud(*cloudNew, *cloudTransf, transformEigen);
