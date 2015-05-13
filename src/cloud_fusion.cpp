@@ -132,7 +132,7 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     pcl_conversions::toPCL(cloudRos, cloudTemp);
     pcl::fromPCLPointCloud2(cloudTemp, *cloudNew);
     ROS_INFO("I received a point cloud from Robot 1...");
-    ROS_INFO("ROS cloud stamp is: %d", cloudRos.header.stamp.toSec());
+    ROS_INFO("ROS cloud stamp is: %d", (int) cloudRos.header.stamp.toSec());
     ROS_INFO("New cloud stamp is: %d", cloudNew->header.stamp);
 
     std::string cloudFrame = cloudNew->header.frame_id;
