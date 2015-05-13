@@ -132,8 +132,6 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     pcl_conversions::toPCL(cloudRos, cloudTemp);
     pcl::fromPCLPointCloud2(cloudTemp, *cloudNew);
     ROS_INFO("I received a point cloud from Robot 1...");
-    ROS_INFO("ROS cloud stamp is: %d", (int) cloudRos.header.stamp.toSec());
-    ROS_INFO("New cloud stamp is: %d", (int) cloudNew->header.stamp);
 
     std::string cloudFrame = cloudNew->header.frame_id;
     std::string fixedFrame = "/map";
@@ -144,7 +142,7 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     tf::StampedTransform transform;
     Eigen::Affine3d transformEigen;
     try {
-        tfListener.waitForTransform(fixedFrame, cloudFrame, ros::Time(cloudRos.header.stamp.toSec()), ros::Duration(15.0));
+        tfListener.waitForTransform(fixedFrame, cloudFrame, ros::Time(cloudRos.header.stamp.toSec()), ros::Duration(10.0));
         tfListener.lookupTransform(fixedFrame, cloudFrame, ros::Time(cloudRos.header.stamp.toSec()), transform);
         tf::transformTFToEigen(transform, transformEigen);
         pcl::transformPointCloud(*cloudNew, *cloudTransf, transformEigen);
