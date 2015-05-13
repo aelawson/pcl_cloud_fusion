@@ -124,51 +124,48 @@ KinectCloud::Ptr finalAlignment(KinectCloud::Ptr cloudOne,
         return cloudTransformed;
 }
 
-void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloud_ros) {
-    pcl::PCLPointCloud2 cloud_temp;
-    pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_new;
-    pcl::PointCloud<pcl::PointXYZRGBA>::Ptr cloud_transf;
-    pcl_conversions::toPCL(cloud_ros, cloud_temp);
-    ROS_INFO("Test 1");
-    pcl::fromPCLPointCloud2(cloud_temp, *cloud_new);
+void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
+    pcl::PCLPointCloud2 cloudTemp;
+    KinectCloud::Ptr cloudNew (new KinectCloud);
+    KinectCloud::Ptr cloudTransf (new KinectCloud);
+    pcl_conversions::toPCL(cloudRos, cloudTemp);
+    pcl::fromPCLPointCloud2(cloudTemp, *cloudNew);
     ROS_INFO("I received a point cloud from Robot 1...");
 
     // Get and apply transform from camera to map
     tf::TransformListener tfListener;
     tf::StampedTransform transform;
-    Eigen::Affine3d transform_eigen;
+    Eigen::Affine3d transformEigen;
     try {
-        ROS_INFO("Test 2");
         tfListener.waitForTransform("/map", "/camera_link", ros::Time::now(), ros::Duration(10.0));
         tfListener.lookupTransform("/map", "/camera_link", ros::Time::now(), transform);
-        tf::transformTFToEigen(transform, transform_eigen);
-        pcl::transformPointCloud(*cloud_new, *cloud_transf, transform_eigen);
+        tf::transformTFToEigen(transform, transformEigen);
+        pcl::transformPointCloud(*cloudNew, *cloudTransf, transformEigen);
     }
     catch(tf::TransformException e) {
         ROS_ERROR("%s", e.what());
         ros::Duration(1.0).sleep();
     }
-    ROS_INFO("Test 3");
     if (cloudOne->points.size() == 0) {
-        *cloudOne = *cloud_transf;
+        *cloudOne = *cloudTransf;
     }
     else {
-        *cloudOne += *cloud_transf;
+        *cloudOne += *cloudTransf;
     }
     indext++;
 }
 
-void streamCallbackRobot2(const sensor_msgs::PointCloud2& cloud_ros) {
-    pcl::PCLPointCloud2 cloud_temp;
-    pcl::PointCloud<pcl::PointXYZRGBA> cloud_new;
-    pcl_conversions::toPCL(cloud_ros, cloud_temp);
-    pcl::fromPCLPointCloud2(cloud_temp, cloud_new);
+void streamCallbackRobot2(const sensor_msgs::PointCloud2& cloudRos) {
+    pcl::PCLPointCloud2 cloudTemp;
+    pcl::PointCloud<pcl::PointXYZRGBA> cloudNew;
+    pcl_conversions::toPCL(cloudRos, cloudTemp);
+    pcl::fromPCLPointCloud2(cloudTemp, cloudNew);
     ROS_INFO("I received a point cloud from Robot 2...");
     if (cloudTwo->points.size() == 0) {
-        *cloudTwo = cloud_new;
+        *cloudTwo = cloudNew;
     }
     else {
-        *cloudTwo += cloud_new;
+        *cloudTwo += cloudNew;
     }
 }
 
