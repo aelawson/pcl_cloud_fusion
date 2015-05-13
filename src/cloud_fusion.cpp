@@ -178,7 +178,7 @@ int main(int argc, char **argv) {
     ros::Subscriber sub1 = robot1.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot1);
     // ros::Subscriber sub2 = robot2.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot2);
     ros::spin();
-    while (indext < 10) {
+    while (indext < 3) {
 
     }
     pcl::io::savePCDFileASCII("test_cloud.pcd", *cloudOne);
