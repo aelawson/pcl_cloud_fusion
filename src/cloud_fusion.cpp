@@ -133,7 +133,7 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     pcl::fromPCLPointCloud2(cloudTemp, *cloudNew);
     ROS_INFO("I received a point cloud from Robot 1...");
 
-    std::string cloudFrame = cloudNew->header.frame_id;
+    std::string cloudFrame = cloudRos.header.frame_id;
     std::string fixedFrame = "/map";
     ROS_INFO("Cloud frame id is: %s", cloudFrame.c_str());
 
@@ -145,7 +145,7 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
         tfListener.waitForTransform(fixedFrame, cloudFrame, ros::Time(0), ros::Duration(1.0));
         tfListener.lookupTransform(fixedFrame, cloudFrame, ros::Time(0), transform);
         tf::transformTFToEigen(transform, transformEigen);
-        pcl::transformPointCloud(*cloudNew, *cloudTransf, transformEigen);
+        pcl::transformPointCloud(*cloudRos, *cloudTransf, transformEigen);
     }
     catch(tf::TransformException e) {
         ROS_ERROR("%s", e.what());
