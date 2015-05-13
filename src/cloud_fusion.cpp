@@ -128,17 +128,22 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     pcl::PCLPointCloud2 cloudTemp;
     KinectCloud::Ptr cloudNew (new KinectCloud);
     KinectCloud::Ptr cloudTransf (new KinectCloud);
+
     pcl_conversions::toPCL(cloudRos, cloudTemp);
     pcl::fromPCLPointCloud2(cloudTemp, *cloudNew);
     ROS_INFO("I received a point cloud from Robot 1...");
+
+    std::string cloudFrame = cloudNew->header.frame_id;
+    std::string fixedFrame = "/map";
+    ROS_INFO("Cloud frame id is: %s", cloudFrame);
 
     // Get and apply transform from camera to map
     tf::TransformListener tfListener;
     tf::StampedTransform transform;
     Eigen::Affine3d transformEigen;
     try {
-        tfListener.waitForTransform("/map", "/camera_link", ros::Time(0), ros::Duration(10.0));
-        tfListener.lookupTransform("/map", "/camera_link", ros::Time(0), transform);
+        tfListener.waitForTransform(fixedFrame, cloudFrame, ros::Time(0), ros::Duration(10.0));
+        tfListener.lookupTransform(fixedFrame, cloudFrame, ros::Time(0), transform);
         tf::transformTFToEigen(transform, transformEigen);
         pcl::transformPointCloud(*cloudNew, *cloudTransf, transformEigen);
     }
