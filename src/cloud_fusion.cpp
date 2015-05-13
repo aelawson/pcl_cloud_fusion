@@ -142,7 +142,7 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     tf::StampedTransform transform;
     Eigen::Affine3d transformEigen;
     try {
-        tfListener.waitForTransform(fixedFrame, cloudFrame, ros::Time((double) cloudNew->header.stamp), ros::Duration(20.0));
+        // tfListener.waitForTransform(fixedFrame, cloudFrame, ros::Time((double) cloudNew->header.stamp), ros::Duration(20.0));
         tfListener.lookupTransform(fixedFrame, cloudFrame, ros::Time((double) cloudNew->header.stamp), transform);
         tf::transformTFToEigen(transform, transformEigen);
         pcl::transformPointCloud(*cloudNew, *cloudTransf, transformEigen);
