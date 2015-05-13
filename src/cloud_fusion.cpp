@@ -135,7 +135,7 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
 
     std::string cloudFrame = cloudNew->header.frame_id;
     std::string fixedFrame = "/map";
-    ROS_INFO("Cloud frame id is: %s", cloudFrame);
+    ROS_INFO("Cloud frame id is: %s", cloudFrame.c_str());
 
     // Get and apply transform from camera to map
     tf::TransformListener tfListener;
