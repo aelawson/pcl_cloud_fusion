@@ -144,7 +144,7 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     try {
         tfListener.waitForTransform(fixedFrame, cloudFrame, ros::Time(0), ros::Duration(10.0));
         ROS_INFO("Cloud stamp is: %d", (int) cloudFrame.header.stamp.toSec());
-        ROS_INFO("ROS time is: %d", (int) ros::Time(0));
+        ROS_INFO("ROS time is: %d", (int) ros::Time(0).toSec());
         tfListener.lookupTransform(fixedFrame, cloudFrame, ros::Time(0), transform);
         tf::transformTFToEigen(transform, transformEigen);
         pcl::transformPointCloud(*cloudNew, *cloudTransf, transformEigen);
