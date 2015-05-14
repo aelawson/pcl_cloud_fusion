@@ -180,7 +180,7 @@ int main(int argc, char **argv) {
     ros::init(argc, argv, "listener");
     ros::NodeHandle robot1;
     ros::Subscriber sub1 = robot1.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot1);
-    tfListener tfListenerInit;
+    tf::TransformListener tfListenerInit;
     mapFusion.tfListener = &tfListenerInit;
     ros::spin();
     while (indext < 3) {
