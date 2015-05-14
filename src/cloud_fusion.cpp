@@ -45,7 +45,6 @@ typedef pcl::SampleConsensusInitialAlignment<KinectPoint, KinectPoint,
 
 KinectCloud::Ptr cloudOne (new KinectCloud);
 KinectCloud::Ptr cloudTwo (new KinectCloud);
-tf::TransformListener tfListener;
 int indext;
 
 // Filters a cloud using a Voxel Grid
@@ -131,6 +130,7 @@ void transformToFixedFrame(const sensor_msgs::PointCloud2& cloudRos,
         std::string fixedFrame = "/map";
         ROS_INFO("Cloud frame id is: %s", cloudFrame.c_str());
         // Get and apply transform from camera to map
+        tf::TransformListener tfListener;
         tf::StampedTransform transform;
         Eigen::Affine3d transformEigen;
         try {
