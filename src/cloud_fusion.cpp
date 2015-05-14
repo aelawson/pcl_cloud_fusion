@@ -51,6 +51,7 @@ class MapFusion {
     KinectCloud::Ptr cloudTwo;
     int indext;
     public:
+        MapFusion();
         void filterCloud(KinectCloud::Ptr cloud, KinectCloud::Ptr cloudFiltered);
         void transformToFixedFrame(const sensor_msgs::PointCloud2& cloudRos,
             KinectCloud::Ptr cloudNew, KinectCloud::Ptr cloudTransf);
@@ -205,7 +206,7 @@ int main(int argc, char **argv) {
     while (mapFusion.indext < 3) {
 
     }
-    pcl::io::savePCDFileASCII("test_cloud.pcd", *cloudOne);
+    pcl::io::savePCDFileASCII("test_cloud.pcd", mapFusion.cloudOne);
     // // Declarations
     // KinectCloud::Ptr cloudOneFiltered (new KinectCloud);
     // KinectCloud::Ptr cloudTwoFiltered (new KinectCloud);
