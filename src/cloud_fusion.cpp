@@ -65,7 +65,7 @@ MapFusion mapFusion;
 int indext;
 
 MapFusion::MapFusion() {
-    mapFusion.cloudOne = KinectCloud::Ptr(new KinectCloud);
+    cloudOne = KinectCloud::Ptr(new KinectCloud);
     cloudTwo = KinectCloud::Ptr(new KinectCloud);
 }
 
