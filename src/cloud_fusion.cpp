@@ -46,7 +46,8 @@ typedef pcl::SampleConsensusInitialAlignment<KinectPoint, KinectPoint,
 class MapFusion {
     public:
         // Attributes
-        tf::TransformListener* tfListener;
+        tf::TransformListener* tfListenerOne;
+        tf::TransformListener* tfListenerTwo;
         KinectCloud::Ptr cloudOne;
         KinectCloud::Ptr cloudTwo;
         // Methods
@@ -157,8 +158,8 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     tf::StampedTransform transform;
     Eigen::Affine3d transformEigen;
     try {
-        (*(mapFusion.tfListener)).waitForTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), ros::Duration(3.0));
-        (*(mapFusion.tfListener)).lookupTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), transform);
+        (*(mapFusion.tfListenerOne)).waitForTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), ros::Duration(3.0));
+        (*(mapFusion.tfListenerOne)).lookupTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), transform);
         tf::transformTFToEigen(transform, transformEigen);
         pcl::transformPointCloud(*cloudNew, *cloudTransf, transformEigen);
         if (mapFusion.cloudOne->points.size() == 0) {
@@ -168,7 +169,39 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
             *(mapFusion.cloudOne) += *cloudTransf;
         }
         ROS_INFO("Received cloud, transformed it, and concatentated it.");
-        pcl::io::savePCDFileASCII("test_cloud.pcd", *(mapFusion.cloudOne));
+        pcl::io::savePCDFileASCII("test_cloud1.pcd", *(mapFusion.cloudOne));
+        ROS_INFO("Written to file.");
+    }
+    catch(tf::TransformException e) {
+        ROS_ERROR("%s", e.what());
+        ros::Duration(1.0).sleep();
+    }
+}
+
+void streamCallbackRobot2(const sensor_msgs::PointCloud2& cloudRos) {
+    pcl::PCLPointCloud2 cloudTemp;
+    KinectCloud::Ptr cloudNew (new KinectCloud);
+    KinectCloud::Ptr cloudTransf (new KinectCloud);
+    pcl_conversions::toPCL(cloudRos, cloudTemp);
+    pcl::fromPCLPointCloud2(cloudTemp, *cloudNew);
+    std::string cloudFrame = cloudRos.header.frame_id;
+    std::string fixedFrame = "/map";
+    // Get and apply transform from camera to map
+    tf::StampedTransform transform;
+    Eigen::Affine3d transformEigen;
+    try {
+        (*(mapFusion.tfListenerTwo)).waitForTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), ros::Duration(3.0));
+        (*(mapFusion.tfListenerTwo)).lookupTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), transform);
+        tf::transformTFToEigen(transform, transformEigen);
+        pcl::transformPointCloud(*cloudNew, *cloudTransf, transformEigen);
+        if (mapFusion.cloudTwo->points.size() == 0) {
+            *(mapFusion.cloudTwo) = *cloudTransf;
+        }
+        else {
+            *(mapFusion.cloudTwo) += *cloudTransf;
+        }
+        ROS_INFO("Received cloud, transformed it, and concatentated it.");
+        pcl::io::savePCDFileASCII("test_cloud2.pcd", *(mapFusion.cloudTwo));
         ROS_INFO("Written to file.");
     }
     catch(tf::TransformException e) {
@@ -181,9 +214,13 @@ int main(int argc, char **argv) {
     // Listen to ROS topics
     ros::init(argc, argv, "listener");
     ros::NodeHandle robot1;
-    ros::Subscriber sub1 = robot1.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot1);
-    tf::TransformListener tfListenerInit;
-    mapFusion.tfListener = &tfListenerInit;
+    ros::NodeHandle robot2;
+    ros::Subscriber sub1 = robot1.subscribe("/robot1/new_clouds", 1000, streamCallbackRobot1);
+    ros::Subscriber sub2 = robot2.subscribe("/robot2/new_clouds", 1000, streamCallbackRobot2);
+    tf::TransformListener tfListenerInitOne;
+    tf::TransformListener tfListenerInitTwo;
+    mapFusion.tfListenerOne = &tfListenerInitOne;
+    mapFusion.tfListenerTwo = &tfListenerInitTwo;
     ros::spin();
     // // Declarations
     // KinectCloud::Ptr mapFusion.cloudOneFiltered (new KinectCloud);
