@@ -43,12 +43,37 @@ typedef pcl::FPFHEstimation<KinectPoint, pcl::Normal,
 typedef pcl::SampleConsensusInitialAlignment<KinectPoint, KinectPoint,
     KinectFeature> KinectSCIA;
 
-KinectCloud::Ptr cloudOne (new KinectCloud);
-KinectCloud::Ptr cloudTwo (new KinectCloud);
-int indext;
+class MapFusion {
+    tf::TransformListener tfListener;
+    ros::NodeHandle robot1;
+    ros::Subscriber sub1;
+    KinectCloud::Ptr cloudOne;
+    KinectCloud::Ptr cloudTwo;
+    int indext;
+    public:
+        void filterCloud(KinectCloud::Ptr cloud, KinectCloud::Ptr cloudFiltered);
+        void transformToFixedFrame(const sensor_msgs::PointCloud2& cloudRos,
+            KinectCloud::Ptr cloudNew, KinectCloud::Ptr cloudTransf);
+        void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos);
+        void streamCallbackRobot2(const sensor_msgs::PointCloud2& cloudRos);
+        KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne,
+            KinectCloud::Ptr cloudTwo);
+        KinectCloud::Ptr finalAlignment(KinectCloud::Ptr cloudOne,
+            KinectCloud::Ptr cloudTwo);
+        KinectNCloud::Ptr getCloudNormals(KinectCloud::Ptr cloud);
+        KinectFCloud::Ptr getCloudFeatures(KinectCloud::Ptr cloud,
+            KinectNCloud::Ptr cloudNormals);
+};
+
+MapFusion::MapFusion() {
+    ros::Subscriber sub1 = robot1.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot1);
+    cloudOne = (new KinectCloud::Ptr);
+    cloudTwo = (new KinectCloud::Ptr);
+    indext = 0;
+}
 
 // Filters a cloud using a Voxel Grid
-void filterCloud(KinectCloud::Ptr cloud, KinectCloud::Ptr cloudFiltered) {
+void MapFusion::filterCloud(KinectCloud::Ptr cloud, KinectCloud::Ptr cloudFiltered) {
     pcl::VoxelGrid<KinectPoint> voxel;
     voxel.setLeafSize(VOXEL_LEAF_SIZE, VOXEL_LEAF_SIZE, VOXEL_LEAF_SIZE);
     voxel.setInputCloud(cloud);
@@ -56,7 +81,7 @@ void filterCloud(KinectCloud::Ptr cloud, KinectCloud::Ptr cloudFiltered) {
 }
 
 // Retrieves normals from cloud.
-KinectNCloud::Ptr getCloudNormals(KinectCloud::Ptr cloud) {
+KinectNCloud::Ptr MapFusion::getCloudNormals(KinectCloud::Ptr cloud) {
     KinectNCloud::Ptr cloudNormals (new KinectNCloud);
     KinectNormalEst estimator;
     estimator.setInputCloud(cloud);
@@ -66,7 +91,7 @@ KinectNCloud::Ptr getCloudNormals(KinectCloud::Ptr cloud) {
 }
 
 // Retrieves features from cloud using a KDTree
-KinectFCloud::Ptr getCloudFeatures(KinectCloud::Ptr cloud,
+KinectFCloud::Ptr MapFusion::getCloudFeatures(KinectCloud::Ptr cloud,
     KinectNCloud::Ptr cloudNormals) {
         KinectFCloud::Ptr cloudFeatures (new KinectFCloud);
         KinectKdTree::Ptr searchMethod (new KinectKdTree);
@@ -80,7 +105,7 @@ KinectFCloud::Ptr getCloudFeatures(KinectCloud::Ptr cloud,
 }
 
 // Initially aligns two clouds using SAC
-KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne,
+KinectCloud::Ptr MapFusion::initialAlignment(KinectCloud::Ptr cloudOne,
     KinectCloud::Ptr cloudTwo) {
         KinectCloud::Ptr cloudTransformed (new KinectCloud);
         KinectCloud::Ptr cloudAligned (new KinectCloud);
@@ -107,7 +132,7 @@ KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne,
 }
 
 // Does second alignment of two clouds using ICP
-KinectCloud::Ptr finalAlignment(KinectCloud::Ptr cloudOne,
+KinectCloud::Ptr MapFusion::finalAlignment(KinectCloud::Ptr cloudOne,
     KinectCloud::Ptr cloudTwo) {
         KinectCloud::Ptr cloudTransformed (new KinectCloud);
         KinectCloud::Ptr cloudAligned (new KinectCloud);
@@ -124,13 +149,12 @@ KinectCloud::Ptr finalAlignment(KinectCloud::Ptr cloudOne,
         return cloudTransformed;
 }
 
-void transformToFixedFrame(const sensor_msgs::PointCloud2& cloudRos,
+void MapFusion::transformToFixedFrame(const sensor_msgs::PointCloud2& cloudRos,
     KinectCloud::Ptr cloudNew, KinectCloud::Ptr cloudTransf) {
         std::string cloudFrame = cloudRos.header.frame_id;
         std::string fixedFrame = "/map";
         ROS_INFO("Cloud frame id is: %s", cloudFrame.c_str());
         // Get and apply transform from camera to map
-        tf::TransformListener tfListener;
         tf::StampedTransform transform;
         Eigen::Affine3d transformEigen;
         try {
@@ -145,7 +169,7 @@ void transformToFixedFrame(const sensor_msgs::PointCloud2& cloudRos,
         }
 }
 
-void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
+void MapFusion::streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     pcl::PCLPointCloud2 cloudTemp;
     KinectCloud::Ptr cloudNew (new KinectCloud);
     KinectCloud::Ptr cloudTransf (new KinectCloud);
@@ -159,7 +183,7 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     indext++;
 }
 
-void streamCallbackRobot2(const sensor_msgs::PointCloud2& cloudRos) {
+void MapFusion::streamCallbackRobot2(const sensor_msgs::PointCloud2& cloudRos) {
     pcl::PCLPointCloud2 cloudTemp;
     pcl::PointCloud<pcl::PointXYZRGBA> cloudNew;
     pcl_conversions::toPCL(cloudRos, cloudTemp);
@@ -175,14 +199,10 @@ void streamCallbackRobot2(const sensor_msgs::PointCloud2& cloudRos) {
 
 int main(int argc, char **argv) {
     // Listen to ROS topics
-    indext = 0;
     ros::init(argc, argv, "listener");
-    ros::NodeHandle robot1;
-    // ros::NodeHandle robot2;
-    ros::Subscriber sub1 = robot1.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot1);
-    // ros::Subscriber sub2 = robot2.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot2);
+    MapFusion mapFusion();
     ros::spin();
-    while (indext < 3) {
+    while (mapFusion.indext < 3) {
 
     }
     pcl::io::savePCDFileASCII("test_cloud.pcd", *cloudOne);
