@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
     tf::TransformListener tfListenerInit;
     mapFusion.tfListener = &tfListenerInit;
     ros::spin();
-    while (indext < 10) {
+    while (indext < 3) {
 
     }
     ROS_INFO("Written to map.");
