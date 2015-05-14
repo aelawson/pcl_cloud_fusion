@@ -44,18 +44,20 @@ typedef pcl::SampleConsensusInitialAlignment<KinectPoint, KinectPoint,
     KinectFeature> KinectSCIA;
 
 class MapFusion {
-    tf::TransformListener tfListener;
-    ros::NodeHandle robot1;
-    ros::Subscriber sub1;
-    KinectCloud::Ptr cloudOne;
-    KinectCloud::Ptr cloudTwo;
-    int indext;
     public:
+        // Attributes
+        tf::TransformListener tfListener;
+        ros::NodeHandle robot1;
+        ros::Subscriber sub1;
+        KinectCloud::Ptr cloudOne (new KinectCloud);
+        KinectCloud::Ptr cloudTwo (new KinectCloud);
+        int indext;
+        // Methods
         MapFusion();
         void filterCloud(KinectCloud::Ptr cloud, KinectCloud::Ptr cloudFiltered);
         void transformToFixedFrame(const sensor_msgs::PointCloud2& cloudRos,
             KinectCloud::Ptr cloudNew, KinectCloud::Ptr cloudTransf);
-        void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos);
+        static void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos);
         void streamCallbackRobot2(const sensor_msgs::PointCloud2& cloudRos);
         KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne,
             KinectCloud::Ptr cloudTwo);
@@ -68,8 +70,6 @@ class MapFusion {
 
 MapFusion::MapFusion() {
     ros::Subscriber sub1 = robot1.subscribe("/rgbdslam/new_clouds", 1000, this->streamCallbackRobot1);
-    cloudOne = (new KinectCloud);
-    cloudTwo = (new KinectCloud);
     indext = 0;
 }
 
@@ -170,7 +170,7 @@ void MapFusion::transformToFixedFrame(const sensor_msgs::PointCloud2& cloudRos,
         }
 }
 
-void MapFusion::streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
+static void MapFusion::streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     pcl::PCLPointCloud2 cloudTemp;
     KinectCloud::Ptr cloudNew (new KinectCloud);
     KinectCloud::Ptr cloudTransf (new KinectCloud);
@@ -206,7 +206,7 @@ int main(int argc, char **argv) {
     while (mapFusion.indext < 3) {
 
     }
-    pcl::io::savePCDFileASCII("test_cloud.pcd", mapFusion.cloudOne);
+    pcl::io::savePCDFileASCII("test_cloud.pcd", *mapFusion.cloudOne);
     // // Declarations
     // KinectCloud::Ptr cloudOneFiltered (new KinectCloud);
     // KinectCloud::Ptr cloudTwoFiltered (new KinectCloud);
