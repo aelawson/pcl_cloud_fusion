@@ -69,7 +69,7 @@ class MapFusion {
 };
 
 MapFusion::MapFusion() {
-    ros::Subscriber sub1 = robot1.subscribe("/rgbdslam/new_clouds", 1000, this->streamCallbackRobot1);
+    ros::Subscriber sub1 = robot1.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot1);
     indext = 0;
 }
 
@@ -170,7 +170,7 @@ void MapFusion::transformToFixedFrame(const sensor_msgs::PointCloud2& cloudRos,
         }
 }
 
-static void MapFusion::streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
+void MapFusion::streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     pcl::PCLPointCloud2 cloudTemp;
     KinectCloud::Ptr cloudNew (new KinectCloud);
     KinectCloud::Ptr cloudTransf (new KinectCloud);
