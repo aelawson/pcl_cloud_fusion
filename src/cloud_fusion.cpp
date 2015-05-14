@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
     tf::TransformListener tfListenerInit;
     mapFusion.tfListener = &tfListenerInit;
     ros::spin();
-    while (indext < 3) {
+    while (indext < 10) {
 
     }
     pcl::io::savePCDFileASCII("test_cloud.pcd", *(mapFusion.cloudOne));
