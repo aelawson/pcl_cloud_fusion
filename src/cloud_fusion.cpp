@@ -187,6 +187,7 @@ int main(int argc, char **argv) {
     while (indext < 10) {
 
     }
+    ROS_INFO("Written to map.");
     pcl::io::savePCDFileASCII("test_cloud.pcd", *(mapFusion.cloudOne));
     // // Declarations
     // KinectCloud::Ptr mapFusion.cloudOneFiltered (new KinectCloud);
