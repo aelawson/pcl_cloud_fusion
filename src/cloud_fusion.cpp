@@ -167,6 +167,7 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
             *(mapFusion.cloudOne) += *cloudTransf;
         }
         indext++;
+        ROS_INFO("Received cloud and transformed it...");
     }
     catch(tf::TransformException e) {
         ROS_ERROR("%s", e.what());
