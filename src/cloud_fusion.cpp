@@ -47,23 +47,25 @@ class MapFusion {
     public:
         // Attributes
         tf::TransformListener tfListener;
-        KinectCloud::Ptr cloudOne;
+        KinectCloud::Ptr mapFusion.cloudOne;
         KinectCloud::Ptr cloudTwo;
         // Methods
         MapFusion();
         void filterCloud(KinectCloud::Ptr cloud, KinectCloud::Ptr cloudFiltered);
-        KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne,
+        KinectCloud::Ptr initialAlignment(KinectCloud::Ptr mapFusion.cloudOne,
             KinectCloud::Ptr cloudTwo);
-        KinectCloud::Ptr finalAlignment(KinectCloud::Ptr cloudOne,
+        KinectCloud::Ptr finalAlignment(KinectCloud::Ptr mapFusion.cloudOne,
             KinectCloud::Ptr cloudTwo);
         KinectNCloud::Ptr getCloudNormals(KinectCloud::Ptr cloud);
         KinectFCloud::Ptr getCloudFeatures(KinectCloud::Ptr cloud,
             KinectNCloud::Ptr cloudNormals);
 };
 
+MapFusion mapFusion;
+int indext;
+
 MapFusion::MapFusion() {
-    ros::init("listener");
-    cloudOne = KinectCloud::Ptr(new KinectCloud);
+    mapFusion.cloudOne = KinectCloud::Ptr(new KinectCloud);
     cloudTwo = KinectCloud::Ptr(new KinectCloud);
 }
 
@@ -100,17 +102,17 @@ KinectFCloud::Ptr MapFusion::getCloudFeatures(KinectCloud::Ptr cloud,
 }
 
 // Initially aligns two clouds using SAC
-KinectCloud::Ptr MapFusion::initialAlignment(KinectCloud::Ptr cloudOne,
+KinectCloud::Ptr MapFusion::initialAlignment(KinectCloud::Ptr mapFusion.cloudOne,
     KinectCloud::Ptr cloudTwo) {
         KinectCloud::Ptr cloudTransformed (new KinectCloud);
         KinectCloud::Ptr cloudAligned (new KinectCloud);
         KinectSCIA scia;
-        KinectNCloud::Ptr cloudOneNormals
-            = getCloudNormals(cloudOne);
+        KinectNCloud::Ptr mapFusion.cloudOneNormals
+            = getCloudNormals(mapFusion.cloudOne);
         KinectNCloud::Ptr cloudTwoNormals
             = getCloudNormals(cloudTwo);
-        KinectFCloud::Ptr cloudOneFeatures
-            = getCloudFeatures(cloudOne, cloudOneNormals);
+        KinectFCloud::Ptr mapFusion.cloudOneFeatures
+            = getCloudFeatures(mapFusion.cloudOne, mapFusion.cloudOneNormals);
         KinectFCloud::Ptr cloudTwoFeatures
             = getCloudFeatures(cloudTwo, cloudTwoNormals);
         scia.setMinSampleDistance(SCIA_MIN_SAMPLE_DIST);
@@ -118,8 +120,8 @@ KinectCloud::Ptr MapFusion::initialAlignment(KinectCloud::Ptr cloudOne,
         scia.setMaximumIterations(SCIA_MAX_ITERATIONS);
         scia.setInputSource(cloudTwo);
         scia.setSourceFeatures(cloudTwoFeatures);
-        scia.setInputTarget(cloudOne);
-        scia.setTargetFeatures(cloudOneFeatures);
+        scia.setInputTarget(mapFusion.cloudOne);
+        scia.setTargetFeatures(mapFusion.cloudOneFeatures);
         scia.align(*cloudAligned);
         Eigen::Matrix4f transform = scia.getFinalTransformation();
         pcl::transformPointCloud(*cloudTwo, *cloudTransformed, transform);
@@ -127,7 +129,7 @@ KinectCloud::Ptr MapFusion::initialAlignment(KinectCloud::Ptr cloudOne,
 }
 
 // Does second alignment of two clouds using ICP
-KinectCloud::Ptr MapFusion::finalAlignment(KinectCloud::Ptr cloudOne,
+KinectCloud::Ptr MapFusion::finalAlignment(KinectCloud::Ptr mapFusion.cloudOne,
     KinectCloud::Ptr cloudTwo) {
         KinectCloud::Ptr cloudTransformed (new KinectCloud);
         KinectCloud::Ptr cloudAligned (new KinectCloud);
@@ -137,7 +139,7 @@ KinectCloud::Ptr MapFusion::finalAlignment(KinectCloud::Ptr cloudOne,
         icp.setTransformationEpsilon(ICP_TRANSFORMATION_EPSILON);
         icp.setEuclideanFitnessEpsilon(ICP_EUCLIDEAN_EPSILON);
         icp.setInputSource(cloudTwo);
-        icp.setInputTarget(cloudOne);
+        icp.setInputTarget(mapFusion.cloudOne);
         icp.align(*cloudAligned);
         Eigen::Matrix4f transform = icp.getFinalTransformation();
         pcl::transformPointCloud(*cloudTwo, *cloudTransformed, transform);
@@ -154,15 +156,15 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     tf::StampedTransform transform;
     Eigen::Affine3d transformEigen;
     try {
-        tfListener.waitForTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), ros::Duration(3.0));
-        tfListener.lookupTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), transform);
+        mapFusion.tfListener.waitForTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), ros::Duration(3.0));
+        mapFusion.tfListener.lookupTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), transform);
         tf::transformTFToEigen(transform, transformEigen);
         pcl::transformPointCloud(*cloudNew, *cloudTransf, transformEigen);
-        if (cloudOne->points.size() == 0) {
-            *cloudOne = *cloudTransf;
+        if (mapFusion.cloudOne->points.size() == 0) {
+            *mapFusion.cloudOne = *cloudTransf;
         }
         else {
-            *cloudOne += *cloudTransf;
+            *mapFusion.cloudOne += *cloudTransf;
         }
         indext++;
     }
@@ -171,9 +173,6 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
         ros::Duration(1.0).sleep();
     }
 }
-
-MapFusion mapFusion;
-int indext;
 
 int main(int argc, char **argv) {
     // Listen to ROS topics
@@ -187,29 +186,29 @@ int main(int argc, char **argv) {
     }
     pcl::io::savePCDFileASCII("test_cloud.pcd", *mapFusion.cloudOne);
     // // Declarations
-    // KinectCloud::Ptr cloudOneFiltered (new KinectCloud);
+    // KinectCloud::Ptr mapFusion.cloudOneFiltered (new KinectCloud);
     // KinectCloud::Ptr cloudTwoFiltered (new KinectCloud);
     // KinectCloud::Ptr cloudTransformed (new KinectCloud);
     //
-    // pcl::io::loadPCDFile("cloud_new_1.pcd", *cloudOne);
+    // pcl::io::loadPCDFile("cloud_new_1.pcd", *mapFusion.cloudOne);
     // pcl::io::loadPCDFile("cloud_new_2.pcd", *cloudTwo);
     //
     // // Filtering
-    // filterCloud(cloudOne, cloudOneFiltered);
+    // filterCloud(mapFusion.cloudOne, mapFusion.cloudOneFiltered);
     // filterCloud(cloudTwo, cloudTwoFiltered);
     //
     // // Registration
-    // cloudTransformed = initialAlignment(cloudOneFiltered, cloudTwoFiltered);
-    // cloudTransformed = finalAlignment(cloudOneFiltered, cloudTransformed);
+    // cloudTransformed = initialAlignment(mapFusion.cloudOneFiltered, cloudTwoFiltered);
+    // cloudTransformed = finalAlignment(mapFusion.cloudOneFiltered, cloudTransformed);
     //
     // // Cloud concatenation
-    // *cloudOneFiltered += *cloudTransformed;
+    // *mapFusion.cloudOneFiltered += *cloudTransformed;
     //
     // // Visualization
     // pcl::visualization::CloudViewer viewer("Cloud Viewer");
     //
     // // Blocks until the cloud is actually rendered
-    // viewer.showCloud(cloudOneFiltered);
+    // viewer.showCloud(mapFusion.cloudOneFiltered);
     // while (!viewer.wasStopped()) {
     // }
     return 0;
