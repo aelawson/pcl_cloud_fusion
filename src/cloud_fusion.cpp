@@ -62,7 +62,6 @@ class MapFusion {
 };
 
 MapFusion mapFusion;
-int indext;
 
 MapFusion::MapFusion() {
     cloudOne = KinectCloud::Ptr(new KinectCloud);
@@ -166,8 +165,9 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
         else {
             *(mapFusion.cloudOne) += *cloudTransf;
         }
-        indext++;
-        ROS_INFO("Received cloud and transformed it...");
+        ROS_INFO("Received cloud, transformed it, and concatentated it.");
+        pcl::io::savePCDFileASCII("test_cloud.pcd", *(mapFusion.cloudOne));
+        ROS_INFO("Written to file.");
     }
     catch(tf::TransformException e) {
         ROS_ERROR("%s", e.what());
@@ -177,18 +177,12 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
 
 int main(int argc, char **argv) {
     // Listen to ROS topics
-    indext = 0;
     ros::init(argc, argv, "listener");
     ros::NodeHandle robot1;
     ros::Subscriber sub1 = robot1.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot1);
     tf::TransformListener tfListenerInit;
     mapFusion.tfListener = &tfListenerInit;
     ros::spin();
-    while (indext < 3) {
-
-    }
-    ROS_INFO("Written to map.");
-    pcl::io::savePCDFileASCII("test_cloud.pcd", *(mapFusion.cloudOne));
     // // Declarations
     // KinectCloud::Ptr mapFusion.cloudOneFiltered (new KinectCloud);
     // KinectCloud::Ptr cloudTwoFiltered (new KinectCloud);
