@@ -149,6 +149,8 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     pcl::PCLPointCloud2 cloudTemp;
     KinectCloud::Ptr cloudNew (new KinectCloud);
     KinectCloud::Ptr cloudTransf (new KinectCloud);
+    pcl_conversions::toPCL(cloudRos, cloudTemp);
+    pcl::fromPCLPointCloud2(cloudTemp, cloudNew);
     std::string cloudFrame = cloudRos.header.frame_id;
     std::string fixedFrame = "/map";
     // Get and apply transform from camera to map
