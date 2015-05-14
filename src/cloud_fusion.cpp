@@ -156,8 +156,8 @@ void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     tf::StampedTransform transform;
     Eigen::Affine3d transformEigen;
     try {
-        *(mapFusion.tfListener).waitForTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), ros::Duration(3.0));
-        *(mapFusion.tfListener).lookupTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), transform);
+        (*(mapFusion.tfListener)).waitForTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), ros::Duration(3.0));
+        (*(mapFusion.tfListener)).lookupTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), transform);
         tf::transformTFToEigen(transform, transformEigen);
         pcl::transformPointCloud(*cloudNew, *cloudTransf, transformEigen);
         if (mapFusion.cloudOne->points.size() == 0) {
