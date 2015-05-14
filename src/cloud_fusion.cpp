@@ -47,14 +47,14 @@ class MapFusion {
     public:
         // Attributes
         tf::TransformListener tfListener;
-        KinectCloud::Ptr mapFusion.cloudOne;
+        KinectCloud::Ptr cloudOne;
         KinectCloud::Ptr cloudTwo;
         // Methods
         MapFusion();
         void filterCloud(KinectCloud::Ptr cloud, KinectCloud::Ptr cloudFiltered);
-        KinectCloud::Ptr initialAlignment(KinectCloud::Ptr mapFusion.cloudOne,
+        KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne,
             KinectCloud::Ptr cloudTwo);
-        KinectCloud::Ptr finalAlignment(KinectCloud::Ptr mapFusion.cloudOne,
+        KinectCloud::Ptr finalAlignment(KinectCloud::Ptr cloudOne,
             KinectCloud::Ptr cloudTwo);
         KinectNCloud::Ptr getCloudNormals(KinectCloud::Ptr cloud);
         KinectFCloud::Ptr getCloudFeatures(KinectCloud::Ptr cloud,
@@ -102,17 +102,17 @@ KinectFCloud::Ptr MapFusion::getCloudFeatures(KinectCloud::Ptr cloud,
 }
 
 // Initially aligns two clouds using SAC
-KinectCloud::Ptr MapFusion::initialAlignment(KinectCloud::Ptr mapFusion.cloudOne,
+KinectCloud::Ptr MapFusion::initialAlignment(KinectCloud::Ptr cloudOne,
     KinectCloud::Ptr cloudTwo) {
         KinectCloud::Ptr cloudTransformed (new KinectCloud);
         KinectCloud::Ptr cloudAligned (new KinectCloud);
         KinectSCIA scia;
-        KinectNCloud::Ptr mapFusion.cloudOneNormals
-            = getCloudNormals(mapFusion.cloudOne);
+        KinectNCloud::Ptr cloudOneNormals
+            = getCloudNormals(cloudOne);
         KinectNCloud::Ptr cloudTwoNormals
             = getCloudNormals(cloudTwo);
-        KinectFCloud::Ptr mapFusion.cloudOneFeatures
-            = getCloudFeatures(mapFusion.cloudOne, mapFusion.cloudOneNormals);
+        KinectFCloud::Ptr cloudOneFeatures
+            = getCloudFeatures(cloudOne, cloudOneNormals);
         KinectFCloud::Ptr cloudTwoFeatures
             = getCloudFeatures(cloudTwo, cloudTwoNormals);
         scia.setMinSampleDistance(SCIA_MIN_SAMPLE_DIST);
@@ -120,8 +120,8 @@ KinectCloud::Ptr MapFusion::initialAlignment(KinectCloud::Ptr mapFusion.cloudOne
         scia.setMaximumIterations(SCIA_MAX_ITERATIONS);
         scia.setInputSource(cloudTwo);
         scia.setSourceFeatures(cloudTwoFeatures);
-        scia.setInputTarget(mapFusion.cloudOne);
-        scia.setTargetFeatures(mapFusion.cloudOneFeatures);
+        scia.setInputTarget(cloudOne);
+        scia.setTargetFeatures(cloudOneFeatures);
         scia.align(*cloudAligned);
         Eigen::Matrix4f transform = scia.getFinalTransformation();
         pcl::transformPointCloud(*cloudTwo, *cloudTransformed, transform);
@@ -129,7 +129,7 @@ KinectCloud::Ptr MapFusion::initialAlignment(KinectCloud::Ptr mapFusion.cloudOne
 }
 
 // Does second alignment of two clouds using ICP
-KinectCloud::Ptr MapFusion::finalAlignment(KinectCloud::Ptr mapFusion.cloudOne,
+KinectCloud::Ptr MapFusion::finalAlignment(KinectCloud::Ptr cloudOne,
     KinectCloud::Ptr cloudTwo) {
         KinectCloud::Ptr cloudTransformed (new KinectCloud);
         KinectCloud::Ptr cloudAligned (new KinectCloud);
@@ -139,7 +139,7 @@ KinectCloud::Ptr MapFusion::finalAlignment(KinectCloud::Ptr mapFusion.cloudOne,
         icp.setTransformationEpsilon(ICP_TRANSFORMATION_EPSILON);
         icp.setEuclideanFitnessEpsilon(ICP_EUCLIDEAN_EPSILON);
         icp.setInputSource(cloudTwo);
-        icp.setInputTarget(mapFusion.cloudOne);
+        icp.setInputTarget(cloudOne);
         icp.align(*cloudAligned);
         Eigen::Matrix4f transform = icp.getFinalTransformation();
         pcl::transformPointCloud(*cloudTwo, *cloudTransformed, transform);
