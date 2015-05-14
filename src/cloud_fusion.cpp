@@ -43,20 +43,19 @@ typedef pcl::FPFHEstimation<KinectPoint, pcl::Normal,
 typedef pcl::SampleConsensusInitialAlignment<KinectPoint, KinectPoint,
     KinectFeature> KinectSCIA;
 
+indext++;
+
 class MapFusion {
     public:
         // Attributes
         tf::TransformListener tfListener;
         ros::NodeHandle robot1;
         ros::Subscriber sub1;
-        KinectCloud::Ptr cloudOne (new KinectCloud);
-        KinectCloud::Ptr cloudTwo (new KinectCloud);
-        int indext;
+        KinectCloud::Ptr cloudOne;
+        KinectCloud::Ptr cloudTwo;
         // Methods
         MapFusion();
         void filterCloud(KinectCloud::Ptr cloud, KinectCloud::Ptr cloudFiltered);
-        void transformToFixedFrame(const sensor_msgs::PointCloud2& cloudRos,
-            KinectCloud::Ptr cloudNew, KinectCloud::Ptr cloudTransf);
         static void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos);
         void streamCallbackRobot2(const sensor_msgs::PointCloud2& cloudRos);
         KinectCloud::Ptr initialAlignment(KinectCloud::Ptr cloudOne,
@@ -69,8 +68,9 @@ class MapFusion {
 };
 
 MapFusion::MapFusion() {
+    cloudOne (new KinectCloud);
+    cloudTwo (new KinectCloud);
     ros::Subscriber sub1 = robot1.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot1);
-    indext = 0;
 }
 
 // Filters a cloud using a Voxel Grid
@@ -150,38 +150,31 @@ KinectCloud::Ptr MapFusion::finalAlignment(KinectCloud::Ptr cloudOne,
         return cloudTransformed;
 }
 
-void MapFusion::transformToFixedFrame(const sensor_msgs::PointCloud2& cloudRos,
-    KinectCloud::Ptr cloudNew, KinectCloud::Ptr cloudTransf) {
-        std::string cloudFrame = cloudRos.header.frame_id;
-        std::string fixedFrame = "/map";
-        ROS_INFO("Cloud frame id is: %s", cloudFrame.c_str());
-        // Get and apply transform from camera to map
-        tf::StampedTransform transform;
-        Eigen::Affine3d transformEigen;
-        try {
-            tfListener.waitForTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), ros::Duration(3.0));
-            tfListener.lookupTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), transform);
-            tf::transformTFToEigen(transform, transformEigen);
-            pcl::transformPointCloud(*cloudNew, *cloudTransf, transformEigen);
-        }
-        catch(tf::TransformException e) {
-            ROS_ERROR("%s", e.what());
-            ros::Duration(1.0).sleep();
-        }
-}
-
 void MapFusion::streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     pcl::PCLPointCloud2 cloudTemp;
     KinectCloud::Ptr cloudNew (new KinectCloud);
     KinectCloud::Ptr cloudTransf (new KinectCloud);
-    transformToFixedFrame(cloudRos, cloudNew, cloudTransf);
+    std::string cloudFrame = cloudRos.header.frame_id;
+    std::string fixedFrame = "/map";
+    // Get and apply transform from camera to map
+    tf::StampedTransform transform;
+    Eigen::Affine3d transformEigen;
+    try {
+        tfListener.waitForTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), ros::Duration(3.0));
+        tfListener.lookupTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), transform);
+        tf::transformTFToEigen(transform, transformEigen);
+        pcl::transformPointCloud(*cloudNew, *cloudTransf, transformEigen);
+    }
+    catch(tf::TransformException e) {
+        ROS_ERROR("%s", e.what());
+        ros::Duration(1.0).sleep();
+    }
     if (cloudOne->points.size() == 0) {
         *cloudOne = *cloudTransf;
     }
     else {
         *cloudOne += *cloudTransf;
     }
-    indext++;
 }
 
 void MapFusion::streamCallbackRobot2(const sensor_msgs::PointCloud2& cloudRos) {
@@ -200,10 +193,11 @@ void MapFusion::streamCallbackRobot2(const sensor_msgs::PointCloud2& cloudRos) {
 
 int main(int argc, char **argv) {
     // Listen to ROS topics
+    indext = 0;
     ros::init(argc, argv, "listener");
     MapFusion mapFusion;
     ros::spin();
-    while (mapFusion.indext < 3) {
+    while (indext < 3) {
 
     }
     pcl::io::savePCDFileASCII("test_cloud.pcd", *mapFusion.cloudOne);
