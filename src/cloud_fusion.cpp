@@ -125,7 +125,7 @@ KinectCloud::Ptr finalAlignment(KinectCloud::Ptr cloudOne,
         return cloudTransformed;
 }
 
-void transformToFixedFrame(sensor_msgs::PointCloud2& cloudRos,
+void transformToFixedFrame(const sensor_msgs::PointCloud2& cloudRos,
     KinectCloud::Ptr cloudNew, KinectCloud::Ptr cloudTransf) {
         std::string cloudFrame = cloudRos.header.frame_id;
         std::string fixedFrame = "/map";
