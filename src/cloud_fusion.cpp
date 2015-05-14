@@ -125,6 +125,26 @@ KinectCloud::Ptr finalAlignment(KinectCloud::Ptr cloudOne,
         return cloudTransformed;
 }
 
+void transformToFixedFrame(sensor_msgs::PointCloud2& cloudRos,
+    KinectCloud::Ptr cloudNew, KinectCloud::Ptr cloudTransf) {
+        std::string cloudFrame = cloudRos.header.frame_id;
+        std::string fixedFrame = "/map";
+        ROS_INFO("Cloud frame id is: %s", cloudFrame.c_str());
+        // Get and apply transform from camera to map
+        tf::StampedTransform transform;
+        Eigen::Affine3d transformEigen;
+        try {
+            tfListener.waitForTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), ros::Duration(3.0));
+            tfListener.lookupTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), transform);
+            tf::transformTFToEigen(transform, transformEigen);
+            pcl::transformPointCloud(*cloudNew, *cloudTransf, transformEigen);
+        }
+        catch(tf::TransformException e) {
+            ROS_ERROR("%s", e.what());
+            ros::Duration(1.0).sleep();
+        }
+}
+
 void streamCallbackRobot1(const sensor_msgs::PointCloud2& cloudRos) {
     pcl::PCLPointCloud2 cloudTemp;
     KinectCloud::Ptr cloudNew (new KinectCloud);
@@ -151,26 +171,6 @@ void streamCallbackRobot2(const sensor_msgs::PointCloud2& cloudRos) {
     else {
         *cloudTwo += cloudNew;
     }
-}
-
-void transformToFixedFrame(sensor_msgs::PointCloud2& cloudRos,
-    KinectCloud::Ptr cloudNew, KinectCloud::Ptr cloudTransf) {
-        std::string cloudFrame = cloudRos.header.frame_id;
-        std::string fixedFrame = "/map";
-        ROS_INFO("Cloud frame id is: %s", cloudFrame.c_str());
-        // Get and apply transform from camera to map
-        tf::StampedTransform transform;
-        Eigen::Affine3d transformEigen;
-        try {
-            tfListener.waitForTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), ros::Duration(3.0));
-            tfListener.lookupTransform(fixedFrame, cloudFrame, ros::Time((double) cloudRos.header.stamp.toSec()), transform);
-            tf::transformTFToEigen(transform, transformEigen);
-            pcl::transformPointCloud(*cloudNew, *cloudTransf, transformEigen);
-        }
-        catch(tf::TransformException e) {
-            ROS_ERROR("%s", e.what());
-            ros::Duration(1.0).sleep();
-        }
 }
 
 int main(int argc, char **argv) {
