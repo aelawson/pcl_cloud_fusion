@@ -67,9 +67,9 @@ class MapFusion {
 };
 
 MapFusion::MapFusion() {
-    ros::Subscriber sub1 = robot1.subscribe("/rgbdslam/new_clouds", 1000, streamCallbackRobot1);
-    cloudOne = (new KinectCloud::Ptr);
-    cloudTwo = (new KinectCloud::Ptr);
+    ros::Subscriber sub1 = robot1.subscribe("/rgbdslam/new_clouds", 1000, this->streamCallbackRobot1);
+    cloudOne = (new KinectCloud);
+    cloudTwo = (new KinectCloud);
     indext = 0;
 }
 
@@ -201,7 +201,7 @@ void MapFusion::streamCallbackRobot2(const sensor_msgs::PointCloud2& cloudRos) {
 int main(int argc, char **argv) {
     // Listen to ROS topics
     ros::init(argc, argv, "listener");
-    MapFusion mapFusion();
+    MapFusion mapFusion;
     ros::spin();
     while (mapFusion.indext < 3) {
 
